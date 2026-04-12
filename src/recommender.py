@@ -1,5 +1,5 @@
 import csv
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
 from dataclasses import dataclass
 
 @dataclass
@@ -40,13 +40,44 @@ class Recommender:
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
         """Return the top k songs ranked by match score for the given user profile."""
-        # TODO: Implement recommendation logic
-        return self.songs[:k]
+        if not self.songs:
+            return []
+        user_prefs = {
+            "genre":        user.favorite_genre,
+            "mood":         user.favorite_mood,
+            "energy":       user.target_energy,
+            "acousticness": 1.0 if user.likes_acoustic else 0.0,
+        }
+        tempos = [s.tempo_bpm for s in self.songs]
+        min_tempo, max_tempo = min(tempos), max(tempos)
+        return sorted(
+            self.songs,
+            key=lambda s: score_song(
+                user_prefs,
+                {"genre": s.genre, "mood": s.mood, "energy": s.energy,
+                 "tempo_bpm": s.tempo_bpm, "acousticness": s.acousticness},
+                min_tempo, max_tempo,
+            )[0],
+            reverse=True,
+        )[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
         """Return a human-readable string explaining why a song was recommended."""
-        # TODO: Implement explanation logic
-        return "Explanation placeholder"
+        user_prefs = {
+            "genre":        user.favorite_genre,
+            "mood":         user.favorite_mood,
+            "energy":       user.target_energy,
+            "acousticness": 1.0 if user.likes_acoustic else 0.0,
+        }
+        tempos = [s.tempo_bpm for s in self.songs]
+        min_tempo, max_tempo = min(tempos), max(tempos)
+        total, reasons = score_song(
+            user_prefs,
+            {"genre": song.genre, "mood": song.mood, "energy": song.energy,
+             "tempo_bpm": song.tempo_bpm, "acousticness": song.acousticness},
+            min_tempo, max_tempo,
+        )
+        return f"Score {total:.2f}: " + " | ".join(reasons)
 
 def load_songs(csv_path: str) -> List[Dict]:
     """Read songs.csv and return a list of dicts with numeric fields cast to float/int."""
