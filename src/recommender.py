@@ -69,11 +69,70 @@ def load_songs(csv_path: str) -> List[Dict]:
             })
     return songs
 
+def score_song(
+    user_prefs: Dict,
+    song: Dict,
+    min_tempo: float,
+    max_tempo: float,
+) -> Tuple[float, List[str]]:
+    """
+    Score a single song against user preferences.
+    Returns (total_score, reasons) where reasons is a list of strings
+    explaining each contribution to the score.
+    """
+    score = 0.0
+    reasons = []
+
+    # Genre exact match: +2.0
+    if song["genre"] == user_prefs.get("genre", ""):
+        score += 2.0
+        reasons.append("genre match (+2.0)")
+
+    # Mood exact match: +1.0
+    if song["mood"] == user_prefs.get("mood", ""):
+        score += 1.0
+        reasons.append("mood match (+1.0)")
+
+    # Energy closeness: weight 1.0, scale 0–1
+    target_energy = user_prefs.get("energy", 0.5)
+    energy_points = round(1.0 * (1.0 - abs(song["energy"] - target_energy)), 2)
+    score += energy_points
+    reasons.append(f"energy closeness (+{energy_points:.2f})")
+
+    # Acousticness closeness: weight 0.5, scale 0–1
+    target_acoustic = user_prefs.get("acousticness", 0.5)
+    acoustic_points = round(0.5 * (1.0 - abs(song["acousticness"] - target_acoustic)), 2)
+    score += acoustic_points
+    reasons.append(f"acousticness closeness (+{acoustic_points:.2f})")
+
+    # Tempo closeness: weight 0.3, normalized to 0–1 first
+    target_tempo = user_prefs.get("tempo_bpm")
+    if target_tempo is not None and max_tempo > min_tempo:
+        tempo_norm = (song["tempo_bpm"] - min_tempo) / (max_tempo - min_tempo)
+        target_norm = (target_tempo - min_tempo) / (max_tempo - min_tempo)
+        tempo_points = round(0.3 * (1.0 - abs(tempo_norm - target_norm)), 2)
+        score += tempo_points
+        reasons.append(f"tempo closeness (+{tempo_points:.2f})")
+
+    return round(score, 2), reasons
+
+
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
     Functional implementation of the recommendation logic.
     Required by src/main.py
     """
-    # TODO: Implement scoring and ranking logic
-    # Expected return format: (song_dict, score, explanation)
-    return []
+    if not songs:
+        return []
+
+    tempos = [s["tempo_bpm"] for s in songs]
+    min_tempo, max_tempo = min(tempos), max(tempos)
+
+    scored = []
+    for song in songs:
+        total_score, reasons = score_song(user_prefs, song, min_tempo, max_tempo)
+        explanation = " | ".join(reasons)
+        scored.append((song, total_score, explanation))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:k]
