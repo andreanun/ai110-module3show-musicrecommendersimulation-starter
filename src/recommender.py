@@ -128,11 +128,13 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
     tempos = [s["tempo_bpm"] for s in songs]
     min_tempo, max_tempo = min(tempos), max(tempos)
 
-    scored = []
-    for song in songs:
-        total_score, reasons = score_song(user_prefs, song, min_tempo, max_tempo)
-        explanation = " | ".join(reasons)
-        scored.append((song, total_score, explanation))
-
-    scored.sort(key=lambda x: x[1], reverse=True)
+    scored = sorted(
+        [
+            (song, score, " | ".join(reasons))
+            for song in songs
+            for score, reasons in [score_song(user_prefs, song, min_tempo, max_tempo)]
+        ],
+        key=lambda x: x[1],
+        reverse=True,
+    )
     return scored[:k]
