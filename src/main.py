@@ -12,39 +12,82 @@ You will implement the functions in recommender.py:
 from recommender import load_songs, recommend_songs
 
 
-def main() -> None:
-    songs = load_songs("data/songs.csv")
-    print(f"Loaded songs: {len(songs)}")
+PROFILES = [
+    # --- Standard profiles ---
+    {
+        "label":        "High-Energy Pop",
+        "genre":        "pop",
+        "mood":         "happy",
+        "energy":       0.90,
+        "acousticness": 0.05,
+        "tempo_bpm":    130,
+    },
+    {
+        "label":        "Chill Lofi Session",
+        "genre":        "lofi",
+        "mood":         "chill",
+        "energy":       0.38,
+        "acousticness": 0.80,
+        "tempo_bpm":    76,
+    },
+    {
+        "label":        "Intense Rock",
+        "genre":        "rock",
+        "mood":         "intense",
+        "energy":       0.92,
+        "acousticness": 0.08,
+        "tempo_bpm":    155,
+    },
+    # --- Adversarial / edge-case profiles ---
+    {
+        "label":        "Conflicting Vibes (peaceful genre, extreme energy)",
+        "genre":        "classical",
+        "mood":         "peaceful",
+        "energy":       0.95,   # classical/peaceful songs sit near 0.18 — direct contradiction
+        "acousticness": 0.05,   # classical is highly acoustic — another contradiction
+        "tempo_bpm":    145,
+    },
+    {
+        "label":        "Missing Genre (reggae/groovy not in catalog)",
+        "genre":        "reggae",
+        "mood":         "groovy",
+        "energy":       0.65,
+        "acousticness": 0.45,
+        "tempo_bpm":    105,
+    },
+    {
+        "label":        "Dead Center (all features at midpoint)",
+        "genre":        "ambient",
+        "mood":         "focused",
+        "energy":       0.50,   # average of the catalog — minimal differentiation signal
+        "acousticness": 0.50,
+        "tempo_bpm":    100,
+    },
+]
 
-    # Taste profile — categorical and numerical fields tell a consistent story
-    user_prefs = {
-        "genre":        "pop",   # preferred genre for exact-match scoring
-        "mood":         "happy", # preferred mood for exact-match scoring
-        "energy":       0.85,    # target energy level (0.0 = very calm, 1.0 = very intense)
-        "acousticness": 0.10,    # target acoustic feel (0.0 = electronic, 1.0 = fully acoustic)
-        "tempo_bpm":    125,     # target tempo in beats per minute
-    }
 
-    recommendations = recommend_songs(user_prefs, songs, k=5)
-
-    divider = "=" * 54
-    thin    = "-" * 54
-    profile_line = (
-        f"  genre={user_prefs['genre']} | mood={user_prefs['mood']} | "
-        f"energy={user_prefs['energy']} | tempo={user_prefs['tempo_bpm']} bpm"
-    )
+def print_recommendations(label: str, recommendations: list) -> None:
+    divider = "=" * 58
+    thin    = "-" * 58
     print(f"\n{divider}")
-    print(f"  Top {len(recommendations)} Recommendations")
-    print(profile_line)
+    print(f"  {label}")
     print(divider)
-
     for rank, (song, score, explanation) in enumerate(recommendations, start=1):
         print(f"\n #{rank}  {song['title']}  —  {song['artist']}")
         print(f"      Score : {score:.2f} / 4.80")
         for reason in explanation.split(" | "):
             print(f"      • {reason}")
-
     print(f"\n{thin}\n")
+
+
+def main() -> None:
+    songs = load_songs("data/songs.csv")
+    print(f"Loaded songs: {len(songs)}\n")
+
+    for prefs in PROFILES:
+        label = prefs["label"]
+        recommendations = recommend_songs(prefs, songs, k=5)
+        print_recommendations(label, recommendations)
 
 
 if __name__ == "__main__":

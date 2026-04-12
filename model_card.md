@@ -61,14 +61,7 @@ Prompts:
 
 ## 6. Limitations and Bias 
 
-Where the system struggles or behaves unfairly. 
-
-Prompts:  
-
-- Features it does not consider  
-- Genres or moods that are underrepresented  
-- Cases where the system overfits to one preference  
-- Ways the scoring might unintentionally favor some users  
+The most significant weakness in this system is its heavy reliance on exact genre matching. Genre accounts for 2.0 out of a maximum score of 4.80 — over 40% of the total — and it is awarded as an all-or-nothing bonus with no partial credit for similar genres. This means a user who enjoys indie pop will never be recommended a pop or soul song, even if those songs match their energy, mood, and tempo almost perfectly. The effect was visible in the "Conflicting Vibes" experiment: a classical song ranked first for a user who wanted high energy and low acousticness, simply because the genre label matched, while sonically closer songs were buried. In practice, this creates a filter bubble where the system constantly reinforces what the user already said they like, rather than surfacing music they might genuinely enjoy.
 
 ---
 
