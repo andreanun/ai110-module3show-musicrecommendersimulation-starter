@@ -152,10 +152,9 @@ Read and complete `model_card.md`:
 
 [**Model Card**](model_card.md)
 
-Write 1 to 2 paragraphs here about what you learned:
+Building this made me realize that a recommender isn't really "smart" — it just turns preferences into numbers and picks the highest one. Every song gets a score based on how close it is to what you said you want, and the math doesn't know anything beyond that. The interesting part is how much the design choices matter. Deciding that genre is worth 2 points and tempo is worth 0.3 points is a judgment call, not a fact. Those weights shape every recommendation the system makes, and changing them even slightly can flip the results completely — which we saw during the weight shift experiment.
 
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
+The bias side was more surprising. I went in thinking bias meant something obvious like "the system ignores certain users." But the real issue was subtler: the system treats genre as an all-or-nothing signal, so users whose genre isn't well represented in the catalog get noticeably worse recommendations, even if their other preferences are perfectly matchable. A reggae fan and a lofi fan could have identical energy and mood preferences, but the lofi fan gets three strong candidates and the reggae fan gets five nearly identical results that basically mean "we have no idea." That kind of unevenness is easy to miss when you're just looking at the formula — you have to actually run it on different users to see it.
 
 
 ---
