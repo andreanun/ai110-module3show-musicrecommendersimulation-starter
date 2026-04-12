@@ -42,19 +42,48 @@ Each `UserProfile` stores the user's taste preferences:
 | `target_energy` | float 0–1 | Desired energy level (scored by closeness) |
 | `likes_acoustic` | bool | Whether the user prefers acoustic sound |
 
-### Scoring
+### Algorithm Recipe
 
-Each song receives a weighted score:
+Each song is scored using a weighted formula. The loop visits every song in the catalog, computes the five terms below, sums them, then sorts all results descending and returns the top `k`.
 
 ```
-score = 2.0 * genre_match
-      + 1.5 * mood_match
-      + 1.0 * (1 - |song.energy - user.target_energy|)
-      + 0.5 * (1 - |song.acousticness - target_acousticness|)
-      + 0.3 * tempo_closeness (normalized)
+score = 2.0 × genre_match                              # exact match → 1 or 0
+      + 1.0 × mood_match                               # exact match → 1 or 0
+      + 1.0 × (1 − |song.energy − user.energy|)        # closeness, 0–1 scale
+      + 0.5 × (1 − |song.acousticness − user.acousticness|)  # closeness, 0–1 scale
+      + 0.3 × (1 − |tempo_norm(song) − tempo_norm(user)|)    # normalized first
 ```
 
-Genre and mood use exact matches (1 or 0). Energy and acousticness use closeness — a song near your target scores higher than one far away, regardless of magnitude. Songs are ranked by total score and the top `k` are returned.
+**Score range:** 0.0 (no overlap at all) → 4.8 (perfect match on every feature)
+
+**Term-by-term reasoning:**
+
+| Term | Weight | Why this weight |
+|---|---|---|
+| genre | 2.0 | Dominant signal — genre controls instrumentation and production style |
+| mood | 1.0 | What the listener wants right now; half the weight of genre |
+| energy | 1.0 | High-resolution continuous signal; rewards closeness not magnitude |
+| acousticness | 0.5 | Useful tiebreaker but wide catalog spread can distort rankings |
+| tempo | 0.3 | Fine-grained tiebreaker; must be normalized before differencing |
+
+Tempo is normalized to 0–1 using the catalog min and max at runtime:
+```
+tempo_norm = (bpm − min_bpm) / (max_bpm − min_bpm)
+```
+
+Songs are ranked by total score and the top `k` are returned with an explanation.
+
+---
+
+### Known Biases and Limitations
+
+**Genre dominance.** At weight 2.0, genre is worth as much as a perfect mood match plus a perfect energy match combined. A high-energy rock song will lose to a low-energy pop song every time for a pop-preferring user, even if the rock song matches the user's energy and mood exactly. This may cause the system to miss great cross-genre fits.
+
+**Exact-match brittleness.** Genre and mood are string comparisons. "indie pop" and "pop" score 0 for genre match even though they are sonically close. A user who likes "chill" songs will not benefit from "relaxed" or "peaceful" songs that feel nearly identical.
+
+**Catalog size amplifies both problems.** With only 18 songs, genre dominance is especially visible — there may be only one or two songs per genre, so a genre mismatch immediately drops a song to the bottom of the list regardless of how well it fits numerically.
+
+**No personalization over time.** The system applies the same fixed weights to every user. It cannot learn that one user cares deeply about genre while another only cares about energy. Real recommenders adapt weights per user from listening history.
 
 ---
 
