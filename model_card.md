@@ -67,16 +67,13 @@ The most significant weakness in this system is its heavy reliance on exact genr
 
 ## 7. Evaluation  
 
-How you checked whether the recommender behaved as expected. 
+I tested six different user profiles. Three of them were "normal" — High-Energy Pop, Chill Lofi, and Intense Rock — where the genre and mood I asked for were actually in the catalog. Those mostly made sense. The other three were edge cases I used to break things: one had totally contradicting preferences (classical music but extreme energy), one asked for a genre that doesn't exist in the catalog (reggae), and one just set everything to the middle.
 
-Prompts:  
+The normal profiles worked pretty much how I expected. The lofi profile in particular gave really confident results — the top two songs were almost identical in score, which makes sense since the catalog has three lofi songs that all fit well.
 
-- Which user profiles you tested  
-- What you looked for in the recommendations  
-- What surprised you  
-- Any simple tests or comparisons you ran  
+What surprised me the most was the Conflicting Vibes profile. The user wanted classical music but also wanted really high energy (0.95) and low acousticness — basically the opposite of what classical songs sound like. I expected the system to pick something high-energy, but instead it gave Morning Sonata the top spot just because the genre matched. That felt wrong, and it helped me see how much the genre bonus can overpower everything else.
 
-No need for numeric metrics unless you created some.
+The reggae/missing genre profile was also interesting. When there's no genre match at all, the top 5 results were all super close in score — like 1.46 to 1.59. That basically means the system has no idea what to recommend and is just guessing based on energy values.
 
 ---
 
