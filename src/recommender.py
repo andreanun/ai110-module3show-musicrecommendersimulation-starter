@@ -39,18 +39,17 @@ class Recommender:
         self.songs = songs
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
+        """Return the top k songs ranked by match score for the given user profile."""
         # TODO: Implement recommendation logic
         return self.songs[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
+        """Return a human-readable string explaining why a song was recommended."""
         # TODO: Implement explanation logic
         return "Explanation placeholder"
 
 def load_songs(csv_path: str) -> List[Dict]:
-    """
-    Loads songs from a CSV file.
-    Required by src/main.py
-    """
+    """Read songs.csv and return a list of dicts with numeric fields cast to float/int."""
     songs = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -75,11 +74,7 @@ def score_song(
     min_tempo: float,
     max_tempo: float,
 ) -> Tuple[float, List[str]]:
-    """
-    Score a single song against user preferences.
-    Returns (total_score, reasons) where reasons is a list of strings
-    explaining each contribution to the score.
-    """
+    """Score one song against user_prefs and return (total_score, reasons_list)."""
     score = 0.0
     reasons = []
 
@@ -118,10 +113,7 @@ def score_song(
 
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
-    """
-    Functional implementation of the recommendation logic.
-    Required by src/main.py
-    """
+    """Score every song in the catalog and return the top k as (song, score, explanation) tuples."""
     if not songs:
         return []
 
