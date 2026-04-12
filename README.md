@@ -17,17 +17,44 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+Real-world recommenders like Spotify or YouTube learn from massive amounts of listening history and user behavior to predict what you will enjoy next. They combine content features (what a song sounds like) with collaborative signals (what similar listeners liked). This simulation focuses on the content side: it scores each song based on how closely it matches a user's stated preferences, then returns the top matches. Rather than learning from data over time, it applies a fixed weighted formula — transparent, inspectable, and easy to reason about.
 
-Some prompts to answer:
+### Song Features
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+Each `Song` object stores the following attributes used in scoring:
 
-You can include a simple diagram or bullet list if helpful.
+| Feature | Type | Description |
+|---|---|---|
+| `genre` | string | Musical category (pop, lofi, rock, etc.) |
+| `mood` | string | Emotional tone (happy, chill, intense, etc.) |
+| `energy` | float 0–1 | How energetic or driving the track feels |
+| `acousticness` | float 0–1 | How acoustic vs. electronic the track is |
+| `tempo_bpm` | float | Beats per minute (normalized before scoring) |
+
+### UserProfile Features
+
+Each `UserProfile` stores the user's taste preferences:
+
+| Field | Type | Description |
+|---|---|---|
+| `favorite_genre` | string | Preferred genre for exact-match scoring |
+| `favorite_mood` | string | Preferred mood for exact-match scoring |
+| `target_energy` | float 0–1 | Desired energy level (scored by closeness) |
+| `likes_acoustic` | bool | Whether the user prefers acoustic sound |
+
+### Scoring
+
+Each song receives a weighted score:
+
+```
+score = 2.0 * genre_match
+      + 1.5 * mood_match
+      + 1.0 * (1 - |song.energy - user.target_energy|)
+      + 0.5 * (1 - |song.acousticness - target_acousticness|)
+      + 0.3 * tempo_closeness (normalized)
+```
+
+Genre and mood use exact matches (1 or 0). Energy and acousticness use closeness — a song near your target scores higher than one far away, regardless of magnitude. Songs are ranked by total score and the top `k` are returned.
 
 ---
 
